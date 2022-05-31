@@ -9,7 +9,51 @@ import re
 
 
 def getridges(directory,SIGMA,lthresh,uthresh,minlen,logim=False,linked_lines=True,linkthresh=0):
-    
+    '''
+
+    Parameters
+    ----------
+    directory : str
+        Location of the image files to be analysed.
+    SIGMA : float
+        DESCRIPTION.
+    lthresh : float
+        Lower threshold for the ridgefinding algorithm.
+        This excludes tracks whose hessian eigenvalues fall below lthresh.
+    uthresh : float
+        Upper threshold for the ridgefinding algorithm.
+        This excludes tracks whose hessian eigenvalues exceed uthresh.
+    minlen : int
+        Minimum track length accepted.
+    logim : BOOL, optional
+        Do you want the RidgeFinder to operate on the image in log space?
+        The default is False.
+    linked_lines : BOOL, optional
+        Do you also want the linked ridges? If yes, any ridges with endpoints
+        within linkthresh will be stitched together. This will return both the
+        unlinked and linked dataframes. Otherwise, it will return the unlinked
+        dataframe and an empty list. The default is True.
+    linkthresh : int, optional
+        The maximum distance between endpoints allowed for linking ridges.
+        The default is 0.
+
+    Returns
+    -------
+    Ridges : Dataframe
+        This contains all of the unlinked ridgelines found in the directory.
+        The first line of each column contains the image number and the track's
+        start coordinates for ID purposes. Each row contains the x y coordinates
+        of the ridge. 
+    Linked_Ridges: Dataframe
+        If linked_lines = True
+        This contains all of the unlinked ridgelines found in the directory.
+        The first line of each column contains the image number and the track's
+        start coordinates for ID purposes. Each row contains the x y coordinates
+        of the ridge. 
+        If linked_lines = False
+        This will just return an empty list.
+
+    '''
     ##Get Raw images##
     name = list()
     imnumb = list()

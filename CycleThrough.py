@@ -7,9 +7,22 @@ import matplotlib.pyplot as plt
 
 
 
-def er_plot(ii,Trackimages,imnumb):
+def er_plot(ii,directory):
     ##This just creates a plot of the image sans ridges. 
     ##It serves as a placeholder for if the ridgefinder doesn't work for some reason.
+    ##Get Raw images##
+    name = list()
+    imnumb = list()
+    for np_name in glob.glob(directory+'*.fits'):
+            name.append(np_name)
+            imnumb.append(os.path.basename(np_name))
+    Num_trax=len(name)
+    (Nx,Ny) = fits.getdata(name[0]).shape
+    Trackimages = np.zeros((Num_trax,Nx,Ny))
+    
+    for i in range(Num_trax):
+        Trackimages[i]=np.array(fits.getdata(name[i]))
+    
     img = Trackimages[ii]
     c = 255/np.log(1+np.max(img))
     img2 = c *(np.log(img+1))
@@ -17,9 +30,22 @@ def er_plot(ii,Trackimages,imnumb):
     plt.imshow(img2,cmap='magma')
     plt.pause(0.1)
 
-def make_plot(kk,Trackimages,imnumb):
+def make_plot(kk,directory,sigma, lt, ut, minlen, linkthresh, logim = False):
     ##This will create a plot of tracks and ridge for a single image. 
-    ##It's meant to be used in cycling through plots but can be run alone. 
+    ##It's meant to be used in cycling through plots but can be run alone.
+    
+    ##Get Raw images##
+    name = list()
+    imnumb = list()
+    for np_name in glob.glob(directory+'*.fits'):
+            name.append(np_name)
+            imnumb.append(os.path.basename(np_name))
+    Num_trax=len(name)
+    (Nx,Ny) = fits.getdata(name[0]).shape
+    Trackimages = np.zeros((Num_trax,Nx,Ny))
+    
+    for i in range(Num_trax):
+        Trackimages[i]=np.array(fits.getdata(name[i]))
     
     ################################################################
     ##Initialize matplotlib
@@ -32,13 +58,12 @@ def make_plot(kk,Trackimages,imnumb):
     #These are the Parameters to change to work with the RF        #
     ################################################################
     I=kk #Image number to inspect
-    SIGMA = 3.6 #sigma for derivative determination ~> Related to track width
-    lthresh = 0.3 #tracks with a response lower than this are rejected (0 accepts all)
-    uthresh = 0 #tracks with a response higher than this are rejected (0 accepts all)
-    minlen = 11 #minimum track length accepted
-    linkthresh = 11 #maximum distance to be linked
+    SIGMA = sigma #sigma for derivative determination ~> Related to track width
+    lthresh = lt #tracks with a response lower than this are rejected (0 accepts all)
+    uthresh = ut #tracks with a response higher than this are rejected (0 accepts all)
+    minlen = minlen #minimum track length accepted
+    linkthresh = linkthresh #maximum distance to be linked
     # thresh = 0.0001
-    logim = False
 
     img = Trackimages[I]
     if logim:
@@ -105,29 +130,19 @@ def make_plot(kk,Trackimages,imnumb):
     plt.show()
     plt.pause(0.1) ##This command allows the cycling to actually happen
 
-def cycleimages(directory):
+def cycleimages(directory,sigma, lt, ut, minlen, linkthresh, logim = False):
     ##############################################################
     ##This gets all of the images to be analyzed and stores them##
     ##############################################################
-    
     ##Get Raw images##
-    name = list()
-    imnumb = list()
-    for np_name in glob.glob(directory+'*.fits'):
-            name.append(np_name)
-            imnumb.append(os.path.basename(np_name))
-    Num_trax=len(name)
-    (Nx,Ny) = fits.getdata(name[0]).shape
-    Trackimages = np.zeros((Num_trax,Nx,Ny))
+    Num_trax=len(glob.glob(directory+'*.fits'))
     
-    for i in range(Num_trax):
-        Trackimages[i]=np.array(fits.getdata(name[i]))   
-    for kk in range(len(Trackimages)):
+    for kk in range(Num_trax):
         try:
-            make_plot(kk,Trackimages,imnumb)
-        except:
-            er_plot(kk,Trackimages,imnumb)
-            print("Error Occurred")
+            make_plot(kk,directory,sigma, lt, ut, minlen, linkthresh, logim = False)
+        except Exception as e:
+            print(e)
+            er_plot(kk,directory)
         _ = input("Press [enter] to continue.")
     
     
@@ -135,5 +150,12 @@ if __name__=='__main__':
     
     
     directory = "C:\\Users\\tilly\\Documents\\Simulations\\50torrCF4_5.204keV\\5.204 keV\\"
-    cycleimages(directory)
+    SIGMA = 3.6 #sigma for derivative determination ~> Related to track width
+    lthresh = 0.3 #tracks with a response lower than this are rejected (0 accepts all)
+    uthresh = 0 #tracks with a response higher than this are rejected (0 accepts all)
+    minlen = 11 #minimum track length accepted
+    linkthresh = 11 #maximum distance to be linked
+    logim = False
+    
+    cycleimages(directory,SIGMA,lthresh,uthresh,minlen,linkthresh,logim)
 
