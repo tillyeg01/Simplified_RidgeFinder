@@ -10,13 +10,15 @@ import re
 
 def getridges(directory,SIGMA,lthresh,uthresh,minlen,logim=False,linked_lines=True,linkthresh=0):
     '''
-
+    This finds and extracts the ridge lines from all images of tracks in a
+    given directory.
+    
     Parameters
     ----------
     directory : str
         Location of the image files to be analysed.
     SIGMA : float
-        DESCRIPTION.
+        Sigma for derivative determination (somehow relate to track width).
     lthresh : float
         Lower threshold for the ridgefinding algorithm.
         This excludes tracks whose hessian eigenvalues fall below lthresh.

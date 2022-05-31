@@ -31,6 +31,42 @@ def er_plot(ii,directory):
     plt.pause(0.1)
 
 def make_plot(kk,directory,sigma, lt, ut, minlen, linkthresh, logim = False):
+    '''
+    Create a figure containing the image of the particle track and its
+    ridgeline. Two plots are produced in this figure. One is in linear space
+    and the other is in log space. On both, the unlinked and linked ridges are
+    plotted. The linked are plotted as a thin white line overlayed on the 
+    colored points of the unlinked lines.
+    
+    This can be iterated through.
+    
+    Parameters
+    ----------
+    kk : int
+        Image number to be looked at.
+    directory : str
+        Location of the image files to be analysed.
+    sigma : float
+        Sigma for derivative determination (somehow relate to track width).
+    lt : float
+        Lower threshold for the ridgefinding algorithm.
+        This excludes tracks whose hessian eigenvalues fall below lthresh.
+    ut : float
+        Upper threshold for the ridgefinding algorithm.
+        This excludes tracks whose hessian eigenvalues exceed uthresh.
+    minlen : int
+        Minimum track length accepted.
+    linkthresh : int
+        The maximum distance between endpoints allowed for linking ridges.
+    logim : BOOL, optional
+        Do you want the RidgeFinder to operate on the image in log space?
+        The default is False.
+
+    Returns
+    -------
+    None.
+
+    '''
     ##This will create a plot of tracks and ridge for a single image. 
     ##It's meant to be used in cycling through plots but can be run alone.
     
@@ -131,6 +167,40 @@ def make_plot(kk,directory,sigma, lt, ut, minlen, linkthresh, logim = False):
     plt.pause(0.1) ##This command allows the cycling to actually happen
 
 def cycleimages(directory,sigma, lt, ut, minlen, linkthresh, logim = False):
+    '''
+    Cycle through figures containing the image of the particle track and its
+    ridgeline. Two plots are produced in each figure. One is in linear space
+    and the other is in log space. On both, the unlinked and linked ridges are
+    plotted. The linked are plotted as a thin white line overlayed on the 
+    colored points of the unlinked lines.
+    
+    Parameters
+    ----------
+    kk : int
+        Image number to be looked at.
+    directory : str
+        Location of the image files to be analysed.
+    sigma : float
+        Sigma for derivative determination (somehow relate to track width).
+    lt : float
+        Lower threshold for the ridgefinding algorithm.
+        This excludes tracks whose hessian eigenvalues fall below lthresh.
+    ut : float
+        Upper threshold for the ridgefinding algorithm.
+        This excludes tracks whose hessian eigenvalues exceed uthresh.
+    minlen : int
+        Minimum track length accepted.
+    linkthresh : int
+        The maximum distance between endpoints allowed for linking ridges.
+    logim : BOOL, optional
+        Do you want the RidgeFinder to operate on the image in log space?
+        The default is False.
+
+    Returns
+    -------
+    None.
+
+    '''
     ##############################################################
     ##This gets all of the images to be analyzed and stores them##
     ##############################################################
