@@ -11,11 +11,10 @@ def er_plot(ii,directory):
     ##This just creates a plot of the image sans ridges. 
     ##It serves as a placeholder for if the ridgefinder doesn't work for some reason.
     ##Get Raw images##
-    name = list()
-    imnumb = list()
-    for np_name in glob.glob(directory+'*.fits'):
-            name.append(np_name)
-            imnumb.append(os.path.basename(np_name))
+    plt.close()
+    name= glob.glob(directory+'*.fit')
+    imnumb = [os.path.basename(i) for i in name] 
+    
     Num_trax=len(name)
     (Nx,Ny) = fits.getdata(name[0]).shape
     Trackimages = np.zeros((Num_trax,Nx,Ny))
@@ -28,6 +27,7 @@ def er_plot(ii,directory):
     img2 = c *(np.log(img+1))
     plt.title(str(imnumb[ii]))
     plt.imshow(img2,cmap='magma')
+    plt.show()
     plt.pause(0.1)
 
 def make_plot(kk,directory,sigma, lt, ut, minlen, linkthresh, logim = False):
@@ -71,11 +71,10 @@ def make_plot(kk,directory,sigma, lt, ut, minlen, linkthresh, logim = False):
     ##It's meant to be used in cycling through plots but can be run alone.
     
     ##Get Raw images##
-    name = list()
-    imnumb = list()
-    for np_name in glob.glob(directory+'*.fits'):
-            name.append(np_name)
-            imnumb.append(os.path.basename(np_name))
+      
+    name= glob.glob(directory+'*.fit')
+    imnumb = [os.path.basename(i) for i in name] 
+    
     Num_trax=len(name)
     (Nx,Ny) = fits.getdata(name[0]).shape
     Trackimages = np.zeros((Num_trax,Nx,Ny))
@@ -205,7 +204,7 @@ def cycleimages(directory,sigma, lt, ut, minlen, linkthresh, logim = False):
     ##This gets all of the images to be analyzed and stores them##
     ##############################################################
     ##Get Raw images##
-    Num_trax=len(glob.glob(directory+'*.fits'))
+    Num_trax=len(glob.glob(directory+'*.fit'))
     
     for kk in range(Num_trax):
         try:
@@ -214,18 +213,25 @@ def cycleimages(directory,sigma, lt, ut, minlen, linkthresh, logim = False):
             print(e)
             er_plot(kk,directory)
         _ = input("Press [enter] to continue.")
-    
-    
-if __name__=='__main__':
-    
-    
-    directory = "C:\\Users\\tilly\\Documents\\Simulations\\50torrCF4_5.204keV\\5.204 keV\\"
-    SIGMA = 3.6 #sigma for derivative determination ~> Related to track width
-    lthresh = 0.3 #tracks with a response lower than this are rejected (0 accepts all)
-    uthresh = 0 #tracks with a response higher than this are rejected (0 accepts all)
-    minlen = 11 #minimum track length accepted
-    linkthresh = 11 #maximum distance to be linked
-    logim = False
-    
-    cycleimages(directory,SIGMA,lthresh,uthresh,minlen,linkthresh,logim)
 
+
+
+# def main() :
+#     directory = "C:\\Users\\tilly\\Documents\\Simulations\\50torrCF4_5.204keV\\5.204 keV\\"
+    
+#     SIGMA = 3.6 #sigma for derivative determination ~> Related to track width
+#     lthresh = 0.3 #tracks with a response lower than this are rejected (0 accepts all)
+#     uthresh = 0 #tracks with a response higher than this are rejected (0 accepts all)
+#     minlen = 11 #minimum track length accepted
+#     linkthresh = 11 #maximum distance to be linked
+#     logim = False
+    
+#     cycleimages(directory,SIGMA,lthresh,uthresh,minlen,linkthresh,logim)
+    
+
+
+# if __name__=='__main__':
+#     main()
+
+directory = "C:\\Users\\tilly\\Documents\\Alphas\\Test_Alphas_Austin\\"
+er_plot(0,directory)

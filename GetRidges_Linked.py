@@ -57,11 +57,9 @@ def getridges(directory,SIGMA,lthresh,uthresh,minlen,logim=False,linked_lines=Tr
 
     '''
     ##Get Raw images##
-    name = list()
-    imnumb = list()
-    for np_name in glob.glob(directory+'*.fits'):
-            name.append(np_name)
-            imnumb.append(os.path.basename(np_name))
+    name= glob.glob(directory+'*.fit')
+    imnumb = [os.path.basename(i) for i in name] 
+    
     Num_trax=len(name)
     (Nx,Ny) = fits.getdata(name[0]).shape
     Trackimages = np.zeros((Num_trax,Nx,Ny))
@@ -136,10 +134,8 @@ def getridges(directory,SIGMA,lthresh,uthresh,minlen,logim=False,linked_lines=Tr
     elif linked_lines == False:
           a = []
           return Ridges , a
-      
-if __name__=='__main__':
-    
-    
+  
+def main():
     directory = "C:\\Users\\tilly\\Documents\\Simulations\\50torrCF4_5.204keV\\5.204 keV\\"
     SIGMA = 3.6 #sigma for derivative determination ~> Related to track width
     lthresh = 0.3 #tracks with a response lower than this are rejected (0 accepts all)
@@ -149,3 +145,10 @@ if __name__=='__main__':
     logim = False
     
     Ridges, Linked_Ridges = getridges(directory,SIGMA,lthresh,uthresh,minlen,logim=logim,linked_lines=True, linkthresh=linkthresh)
+            
+  
+    
+if __name__=='__main__':
+    main()
+    
+    
