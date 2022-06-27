@@ -282,8 +282,13 @@ def initdir_simdat(x,y,pix = 1, show = False):
     ys = y.copy()
     
 
-    diffx = xs[pix]-xs[0]
-    diffy = ys[pix]-ys[0]
+    # diffx = xs[pix]-xs[0]
+    # diffy = ys[pix]-ys[0]
+    
+    pt=10
+    
+    diffx = xs[pt]-xs[pt-1]
+    diffy = ys[pt]-ys[pt-1]
     
     initdir = np.arctan2(diffx,diffy)
     
@@ -467,7 +472,7 @@ def getclumps(img, thresh,minmask = 20,maxmask=10000):
     clumpy_label = []
     for i in filtered:
         clumpy_label.append(i)
-    return clumpy_label,filtered
+    return clumpy_label,labelled_array
 
 def gaussian(x, amp, mu, sigma):
     return amp*np.exp(-np.power(x - mu, 2)/(2*np.power(sigma, 2)))
@@ -478,7 +483,7 @@ def plotgaus(A,mean,sigma):
     ys = gaussian(xs,A,mean,sigma)
     plt.plot(xs,ys)
 
-def InitialBragg(x,y,image,show = False):
+def InitialBragg(x,y,image,d=5,show = False):
     """
     Takes an input ridgeline and image and calculates a Bragg curve using 
     tangential profiles to the ridgeline.
@@ -514,7 +519,7 @@ def InitialBragg(x,y,image,show = False):
     for i, theta in enumerate(angle):
 
         slope = np.tan(np.pi/2+theta)
-        d = 5
+        
         dx = d/(np.sqrt(1+slope**2))
         dy = slope*dx
         init = (x[i]+dx,y[i]+dy)
@@ -527,14 +532,14 @@ def InitialBragg(x,y,image,show = False):
         amp = max(zi)
         mean,std=norm.fit(zi)
         xx = np.linspace(0,len(zi),num=len(zi))
-        pars, cov = curve_fit(f=gaussian, xdata=xx, ydata=zi, p0=[amp, len(zi)/2, 4], bounds=(0, np.inf))
+        # pars, cov = curve_fit(f=gaussian, xdata=xx, ydata=zi, p0=[amp, len(zi)/2, 4], bounds=(0, np.inf))
         
         if show:
             plt.figure(1)
             plt.plot([init[1],fin[1]],[init[0],fin[0]],'o-')        
             plt.show()
             
-    return NextBragg,pars,cov
+    return NextBragg#,pars,cov
 
 def simplebragg(x,y,img):
     ##Create a first-order Bragg curve using the intensity at each point
@@ -546,11 +551,11 @@ def simplebragg(x,y,img):
     SimpleBragg = img[xint,yint]
     return SimpleBragg
 
-def getspline(x,y):
+def getspline(x,y,ss=0,Nmult=3):
     ##Find a splinefit of the ridgeline
-    N = len(x)*3
+    N = len(x)*Nmult
     xx = np.linspace(0, 1, N)
-    tck, u = interpolate.splprep([x,y],s=0)
+    tck, u = interpolate.splprep([x,y],s=ss)
     new_points = interpolate.splev(xx,tck)
     ##Get the derivative of this point
     der_points = interpolate.splev(xx,tck,der=1)
