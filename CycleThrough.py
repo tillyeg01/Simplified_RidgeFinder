@@ -4,7 +4,7 @@ import glob
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-
+from skimage import io
 
 
 
@@ -13,10 +13,8 @@ def er_plot(ii,directory):
     ##It serves as a placeholder for if the ridgefinder doesn't work for some reason.
     ##Get Raw images##
     plt.close()
-    # name1= glob.glob(directory+'*light.fits')
-    # name2= glob.glob(directory+'*light.fit')
-    name1= glob.glob(directory+'*light.fits')
-    name2= glob.glob(directory+'*light.fit')
+    name1= glob.glob(directory+'*.fits')
+    name2= glob.glob(directory+'*.fit')
     name = np.concatenate((name1,name2)).tolist()
     imnumb = [os.path.basename(i) for i in name] 
     
@@ -28,6 +26,8 @@ def er_plot(ii,directory):
         Trackimages[i]=np.array(fits.getdata(name[i]))
     
     img = Trackimages[ii]
+    
+    ## Uncomment this to see the pic in log space ##
     # c = 255/np.log(1+np.max(img))
     # img2 = c *(np.log(img+1))
     plt.title(str(imnumb[ii]))
@@ -79,8 +79,6 @@ def make_plot(kk,directory,sigma, lt, ut, minlen, linkthresh, logim = False):
       
     name1= glob.glob(directory+'*.fits')
     name2= glob.glob(directory+'*.fit')
-    # name1= glob.glob(directory+'*.fits')
-    # name2= glob.glob(directory+'*.fit')
     name = np.concatenate((name1,name2)).tolist()
     imnumb = [os.path.basename(i) for i in name] 
     
@@ -178,6 +176,145 @@ def make_plot(kk,directory,sigma, lt, ut, minlen, linkthresh, logim = False):
                 
     plt.show()
     plt.pause(0.1) ##This command allows the cycling to actually happen
+
+def make_plot_tiff(kk,directory,sigma, lt, ut, minlen, linkthresh, logim = False):
+    '''
+    Create a figure containing the image of the particle track and its
+    ridgeline. Two plots are produced in this figure. One is in linear space
+    and the other is in log space. On both, the unlinked and linked ridges are
+    plotted. The linked are plotted as a thin white line overlayed on the 
+    colored points of the unlinked lines.
+    
+    This can be iterated through.
+    
+    Parameters
+    ----------
+    kk : int
+        Image number to be looked at.
+    directory : str
+        Location of the image files to be analysed.
+    sigma : float
+        Sigma for derivative determination (somehow relate to track width).
+    lt : float
+        Lower threshold for the ridgefinding algorithm.
+        This excludes tracks whose hessian eigenvalues fall below lthresh.
+    ut : float
+        Upper threshold for the ridgefinding algorithm.
+        This excludes tracks whose hessian eigenvalues exceed uthresh.
+    minlen : int
+        Minimum track length accepted.
+    linkthresh : int
+        The maximum distance between endpoints allowed for linking ridges.
+    logim : BOOL, optional
+        Do you want the RidgeFinder to operate on the image in log space?
+        The default is False.
+
+    Returns
+    -------
+    None.
+
+    '''
+    ##This will create a plot of tracks and ridge for a single image. 
+    ##It's meant to be used in cycling through plots but can be run alone.
+    
+    ##Get Raw images##
+      
+    name1= glob.glob(directory+'*.tiff')
+    name2= glob.glob(directory+'*.tif')
+    name = np.concatenate((name1,name2)).tolist()
+
+    img = io.imread(name[kk])
+    imnumb = os.path.basename(name[kk]) ## Get image name
+    img = img/20 ## Scale the image
+    
+    
+    ################################################################
+    ##Initialize matplotlib
+    plt.close()
+    plt.rc('font', size=10)
+
+    
+
+    ################################################################
+    #These are the Parameters to change to work with the RF        #
+    ################################################################
+    I=kk #Image number to inspect
+    SIGMA = sigma #sigma for derivative determination ~> Related to track width
+    lthresh = lt #tracks with a response lower than this are rejected (0 accepts all)
+    uthresh = ut #tracks with a response higher than this are rejected (0 accepts all)
+    minlen = minlen #minimum track length accepted
+    linkthresh = linkthresh #maximum distance to be linked
+    # thresh = 0.0001
+
+    ## Logarithmically scales the image 
+    if logim:
+        c = 255/np.log(1+np.max(img))
+        img2 = c *(np.log(img+1))
+    else:
+        img2 = img  
+    
+    c = 255/np.log(1+np.max(img))
+    img3 = c *(np.log(img+1))
+    
+    
+    ##Run Ridgefinder
+    px, py, nx, ny, eigvals, valid = points_out = RF.find_points(img2, sigma=SIGMA, l_thresh = lthresh, u_thresh=uthresh)
+    lines_before, junctions = RF.compose_lines_from_points(points_out)
+    
+    ##Link the Ridges
+    nlines = RF.linklines(lines_before,minlen,linkthresh)
+    lines=lines_before
+    
+    ##Set some plot properties
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16,8), dpi=80, facecolor='w', edgecolor='k')
+    fig.suptitle(str(imnumb))
+    
+    ax1.imshow(img, cmap="magma")
+    ax1.set_title('Linear Scaling')
+    ax2.imshow(img3, cmap="magma")
+    ax2.set_title('Logarithmic Scaling')
+    lim =RF.get_lines_bounding_box(lines)
+    
+    
+    ##Run through all ridges found in image
+    
+    ##Create and plot the splinefit for all unlinked ridgepoints
+    for i, line in enumerate(lines):
+        if len(line[1]) > minlen:
+                
+                ax1.set_xlim(lim)
+                ax1.set_ylim(lim)
+                ax2.set_xlim(lim)
+                ax2.set_ylim(lim)
+                
+                x = px[line[1], line[0]]
+                y = py[line[1], line[0]]
+                
+                ##Get the splinefit for the image
+                try:
+                    new_points,der_points = RF.getspline(x,y,ss=1)    
+                    ax1.plot(new_points[1],new_points[0],'.')
+                    ax2.plot(new_points[1],new_points[0],'.')
+                except Exception as e: print(e)
+
+    ##Create and plot the splinefit for all linked ridgepoints            
+    for i, line in enumerate(nlines):
+        if len(line[1]) > minlen:
+            
+                x = px[line[1], line[0]]
+                y = py[line[1], line[0]]   
+                
+                ##Get the splinefit for the image
+                try:
+                    new_points1,der_points1 = RF.getspline(x,y,ss=2)    
+                    ax1.plot(new_points1[1],new_points1[0],'-',color='white')
+                    ax2.plot(new_points1[1],new_points1[0],'-',color='white')
+                except Exception as e: print(e)
+
+                
+    plt.show()
+    plt.pause(0.1) ##This command allows the cycling to actually happen    
+
 
 def make_plot_2(kk,directory,sigma, lt, ut, minlen, linkthresh, logim = False):
     '''
@@ -360,11 +497,9 @@ def make_plot_2(kk,directory,sigma, lt, ut, minlen, linkthresh, logim = False):
 
 def make_plot_2a(kk,track,directory,sigma, lt, ut, minlen, linkthresh, logim = False, leng=15, pt = 10, stx= 140, sty= 70):
     '''
-    Create a figure containing the image of the particle track and its
-    ridgeline. Two plots are produced in this figure. One is in linear space
-    and the other is in log space. On both, the unlinked and linked ridges are
-    plotted. The linked are plotted as a thin white line overlayed on the 
-    colored points of the unlinked lines.
+    Create a figure containing the image with particle track, its
+    ridgeline and initial direction and a plot with the Bragg curve 
+    along the ridgeline.
     
     This can be iterated through.
     
@@ -372,6 +507,8 @@ def make_plot_2a(kk,track,directory,sigma, lt, ut, minlen, linkthresh, logim = F
     ----------
     kk : int
         Image number to be looked at.
+    track : int
+        Track to be looked at. 
     directory : str
         Location of the image files to be analysed.
     sigma : float
@@ -389,7 +526,16 @@ def make_plot_2a(kk,track,directory,sigma, lt, ut, minlen, linkthresh, logim = F
     logim : BOOL, optional
         Do you want the RidgeFinder to operate on the image in log space?
         The default is False.
-
+    leng : int
+        Length of the initial direction vector.
+    pt : int
+        Location for the initial direction vector to be calculated from and 
+        drawn on.
+    stx sty : int
+        X and Y coordinate for the 1mm bar to be drawn (note, you'll have to 
+        change the length of it in the fxn itself. It's automatically set to
+        6.6 pix)
+    
     Returns
     -------
     None.
@@ -461,27 +607,6 @@ def make_plot_2a(kk,track,directory,sigma, lt, ut, minlen, linkthresh, logim = F
     ax2.set_title('Bragg Curve along Trajectory')
     lim =RF.get_lines_bounding_box(lines)
     
-    
-    ##Run through all ridges found in image
-    
-    # ##Create and plot the splinefit for all unlinked ridgepoints
-    # for i, line in enumerate(lines):
-    #     if len(line[1]) > minlen:
-                
-    #             ax1.set_xlim(lim)
-    #             ax1.set_ylim(lim)
-    #             # ax2.set_xlim(lim)
-    #             # ax2.set_ylim(lim)
-                
-    #             x = px[line[1], line[0]]
-    #             y = py[line[1], line[0]]
-                
-    #             ##Get the splinefit for the image
-    #             new_points,der_points = RF.getspline(x,y,ss=2)    
-    #             # ax1.plot(new_points[1],new_points[0],'.')
-    #             # ax2.plot(new_points[1],new_points[0],'.')
-
-
     ##Create and plot the splinefit for all linked ridgepoints            
     line = nlines[track]
     if len(line[1]) > minlen:
@@ -606,24 +731,3 @@ def cycleimages(directory,sigma, lt, ut, minlen, linkthresh, logim = False):
             er_plot(kk,directory)
         _ = input("Press [enter] to continue.")
 
-
-
-# def main() :
-#     directory = "C:\\Users\\tilly\\Documents\\Simulations\\50torrCF4_5.204keV\\5.204 keV\\"
-    
-#     SIGMA = 3.6 #sigma for derivative determination ~> Related to track width
-#     lthresh = 0.3 #tracks with a response lower than this are rejected (0 accepts all)
-#     uthresh = 0 #tracks with a response higher than this are rejected (0 accepts all)
-#     minlen = 11 #minimum track length accepted
-#     linkthresh = 11 #maximum distance to be linked
-#     logim = False
-    
-#     cycleimages(directory,SIGMA,lthresh,uthresh,minlen,linkthresh,logim)
-    
-
-
-# if __name__=='__main__':
-#     main()
-
-# directory = "C:\\Users\\tilly\\Documents\\Alphas\\Test_Alphas_Austin\\"
-# er_plot(0,directory)

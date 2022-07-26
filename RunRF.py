@@ -14,17 +14,42 @@ linkthresh = 10 #maximum distance to be linked
 logim = False
 
 
-from CycleThrough import cycleimages,make_plot,make_plot_2a, er_plot
-# cycleimages(directory,SIGMA,lthresh,uthresh,minlen,linkthresh,logim)
-make_plot_2a(5,0,directory,SIGMA,lthresh,uthresh,minlen,linkthresh,logim,leng=15, pt = 10, stx= 140, sty= 70)
-# make_plot(3,directory,SIGMA,lthresh,uthresh,minlen,linkthresh,logim)
+from CycleThrough import cycleimages,make_plot,make_plot_2, er_plot
+# cycleimages(directory,
+#             SIGMA,
+#             lthresh,
+#             uthresh,
+#             minlen,
+#             linkthresh,
+#             logim)
+make_plot_2(5,directory,SIGMA,
+            lthresh,
+            uthresh,
+            minlen,
+            linkthresh,
+            logim)
+# make_plot(3,directory,
+#           SIGMA,
+#           lthresh,
+#           uthresh,
+#           minlen,
+#           linkthresh,
+#           logim)
 
 # er_plot(1,directory)
 
 
 
-# from GetRidges_Linked import getridges
-# Ridges, Linked_Ridges = getridges(directory,SIGMA,lthresh,uthresh,minlen,logim=logim,linked_lines=True, linkthresh=linkthresh)
-# # Linked_Ridges.to_csv("C:\\Users\\tilly\\OneDrive - University of New Mexico\\Desktop\\Linked_Ridges_test.csv",index=False)
+from GetRidges_Linked import getridges
+# Ridges, Linked_Ridges = getridges(directory,
+#                                   SIGMA,
+#                                   lthresh,
+#                                   uthresh,
+#                                   minlen,
+#                                   logim=logim,
+#                                   linked_lines=True, 
+#                                   linkthresh=linkthresh)
+
+# Linked_Ridges.to_csv("C:\\Users\\tilly\\OneDrive - University of New Mexico\\Desktop\\Linked_Ridges_test.csv",index=False)
 
 
