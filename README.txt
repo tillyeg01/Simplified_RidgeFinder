@@ -5,7 +5,7 @@ Files Within:
 RFFunctions contains all of the functions (and more!) for finding the ridgelines in images.
 CycleThrough contains functions which allow you to cycle through images within a given directory with their ridgelines overlaid on top.
 GetRidges_Linked contains functions which grab all of the ridges from all of the images within a given directory.
-TrackIsolation contains functions to isolate tracks inside of an image and snip the image to their size (this only works for tiffs right now). 
+TrackIsolation contains functions to isolate tracks inside of an image and snip the image to their size. 
 RunRF contains some example code for using this. 
 
 
