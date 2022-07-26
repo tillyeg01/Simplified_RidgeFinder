@@ -1,11 +1,18 @@
-This is my attempt to begin to make the RidgeFinding process cleaner and more streamlined. It's still very much a work in progress and I will continue to iterate through it.
+This is my attempt to begin to make the RidgeFinding process cleaner and more streamlined. It's still very much a work in progress, but it works.
 
-Now, to run the actual RidgeFinder, just go into RunRF.py, change the directory to one which contains your images to be analysed (they must be .fits files). 
-Then, you can cycle through those images with fitted ridgelines (displaying in both linear and logarithmic space) by uncommenting the cycleimages block and playing with the parameters (or look at a single image by uncommenting the make_plot block). Once the desired parameters are found, comment this out and uncomment the getridges block and it will run the analysis on the whole directory. To save, uncomment the Ridges.to_csv block and input the desired save location. 
+Files Within:
 
-CycleThrough.cycleimages: scans through each image, fitting ridges to each one, for the purpose of evaluating the parameters
+RFFunctions contains all of the functions (and more!) for finding the ridgelines in images.
+CycleThrough contains functions which allow you to cycle through images within a given directory with their ridgelines overlaid on top.
+GetRidges_Linked contains functions which grab all of the ridges from all of the images within a given directory.
+RunRF contains some example code for using this. 
 
-CycleThrough.make_plot: looks at a specified image
 
-GetRidges_Linked.getridges: creates two dataframes of the ridges found and the linked ridges found in the images of the directory
+Parameters which will be important for most of the algorithms:
 
+Sigma: float: sigma for derivative determination ~> Supposedly related to track width
+lthresh: float: tracks with a response lower than this are rejected (0 accepts all)
+uthresh: float: tracks with a response higher than this are rejected (0 accepts all)
+minlen: int:  minimum track length accepted
+linkthresh: int: maximum distance to link ridges (in the case that there are multiple ridgelines on a given track)
+logim: Boolean: which allows you to analyse an image in linear space (False) or log space (True)
