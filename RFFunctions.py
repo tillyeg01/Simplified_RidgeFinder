@@ -553,6 +553,7 @@ def simplebragg(x,y,img):
 
 def getspline(x,y,ss=0,Nmult=3):
     ##Find a splinefit of the ridgeline
+    
     N = len(x)*Nmult
     xx = np.linspace(0, 1, N)
     tck, u = interpolate.splprep([x,y],s=ss)

@@ -57,21 +57,23 @@ def getridges(directory,SIGMA,lthresh,uthresh,minlen,logim=False,linked_lines=Tr
 
     '''
     ##Get Raw images##
-    name= glob.glob(directory+'*.fit')
+    name1= glob.glob(directory+'*.fits')
+    name2= glob.glob(directory+'*.fit')
+    name = np.concatenate((name1,name2)).tolist()
     imnumb = [os.path.basename(i) for i in name] 
     
     Num_trax=len(name)
-    (Nx,Ny) = fits.getdata(name[0]).shape
-    Trackimages = np.zeros((Num_trax,Nx,Ny))
-    for i in range(Num_trax):
-        Trackimages[i]=np.array(fits.getdata(name[i]))   
+    # (Nx,Ny) = fits.getdata(name[0]).shape
+    # Trackimages = np.zeros((Num_trax,Nx,Ny))
+    # for i in range(Num_trax):
+    #     Trackimages[i]=np.array(fits.getdata(name[i]))   
     
     ##Initialize the dataframes
     Ridges = pd.DataFrame()
     Linked_Ridges = pd.DataFrame()
     
-    for j,Im in enumerate(Trackimages):
-        
+    for j in range(Num_trax):
+        Im = fits.getdata(name[j])
         ## Applies Logarithmic scaling if the user so desires
         if logim:
             img = Im
@@ -85,70 +87,74 @@ def getridges(directory,SIGMA,lthresh,uthresh,minlen,logim=False,linked_lines=Tr
         px, py, nx, ny, eigvals, valid = points_out = RF.find_points(I, sigma=SIGMA, l_thresh = lthresh, u_thresh=uthresh)
         lines, junctions = RF.compose_lines_from_points(points_out)
         link_lines = RF.linklines(lines,minlen,linkthresh) ## Link ridges close to one another
+        if linked_lines == False:
+            ##Cycle through the tracks to determine the statistics of each one##
+            for i, line in enumerate(lines):
+                if len(line[1]) > minlen:
+                    x = px[line[1], line[0]]
+                    y = py[line[1], line[0]]
+                    
+                    
+                    ##Get each track's identifying information
+                    Track_ID = str(j)+":_" + str(round(x[0],1))+"_"+str(round(y[0],1)) #Unique ID for track
+                    Im_ID = imnumb[j] #Image ID from filename (not the same as Im_num
+                    tru_Im_num = int(re.findall('\d+',Im_ID)[0]) #Extracts the number from the filename
+                    
+                               
+                    new_points,der_points = RF.getspline(x,y) #Get spline of ridgline for initial direction calculation 
+                    ridgecoord=[str(m)+' '+str(n) for m,n in zip(new_points[0],new_points[1])]
+                    Ridgescoord = pd.DataFrame({'Image: '+str(tru_Im_num)+'; Track: '+str(Track_ID):ridgecoord})
+                    Ridges = pd.concat([Ridges,Ridgescoord],axis=1)
+            return Ridges
+                
+        
+            
+        
+        elif linked_lines == True:
+            for k, line1 in enumerate(link_lines):
+                try:
+                    if len(line1[1]) > minlen:
+                            x1 = px[line1[1], line1[0]]
+                            y1 = py[line1[1], line1[0]]
+                            Track_ID = str(j)+":_" + str(round(x1[0],1))+"_"+str(round(y1[0],1)) #Unique ID for track
+                            # Im_num = str(j) #Unique ID for image
+                            Im_ID = imnumb[j] #Image ID from filename (not the same as Im_num
+                            tru_Im_num = int(re.findall('\d+',Im_ID)[0]) #Extracts the number from the filename       
+                            
+                            ##Get the splinefit for the image
+                            new_points,der_points = RF.getspline(x1,y1)   
+                            # Track_length =np.hypot(np.diff(x1), np.diff(y1)).sum()*176/10**3 #Determine tracklength
+                            
+                            Lridgecoord=[str(m)+' '+str(n) for m,n in zip(new_points[0],new_points[1])]
+                            # LRidgescoord = pd.DataFrame({'Image: '+str(tru_Im_num)+'; Track: '+str(Track_ID):Lridgecoord})
+                            LRidgescoord = pd.DataFrame({'Image: '+Im_ID :Lridgecoord})
 
-        ##Cycle through the tracks to determine the statistics of each one##
-        for i, line in enumerate(lines):
-            if len(line[1]) > minlen:
-                x = px[line[1], line[0]]
-                y = py[line[1], line[0]]
-                
-                
-                ##Get each track's identifying information
-                Track_ID = str(j)+":_" + str(round(x[0],1))+"_"+str(round(y[0],1)) #Unique ID for track
-                Im_ID = imnumb[j] #Image ID from filename (not the same as Im_num
-                tru_Im_num = int(re.findall('\d+',Im_ID)[0]) #Extracts the number from the filename
-                
-                           
-                new_points,der_points = RF.getspline(x,y) #Get spline of ridgline for initial direction calculation 
-                ridgecoord=[str(m)+' '+str(n) for m,n in zip(new_points[0],new_points[1])]
-                Ridgescoord = pd.DataFrame({'Image: '+str(tru_Im_num)+'; Track: '+str(Track_ID):ridgecoord})
-                Ridges = pd.concat([Ridges,Ridgescoord],axis=1)
-                
+                            Linked_Ridges = pd.concat([Linked_Ridges,LRidgescoord],axis=1)
+                except Exception as e:                
+                    print("For Im "+str(j)+" linked track "+str(k))
+                    print(e)
+            return Linked_Ridges
         
-            
-        
-        
-        for k, line1 in enumerate(link_lines):
-            try:
-                if len(line1[1]) > minlen:
-                        x1 = px[line1[1], line1[0]]
-                        y1 = py[line1[1], line1[0]]
-                        Track_ID = str(j)+":_" + str(round(x1[0],1))+"_"+str(round(y1[0],1)) #Unique ID for track
-                        # Im_num = str(j) #Unique ID for image
-                        Im_ID = imnumb[j] #Image ID from filename (not the same as Im_num
-                        tru_Im_num = int(re.findall('\d+',Im_ID)[0]) #Extracts the number from the filename       
-                        
-                        ##Get the splinefit for the image
-                        new_points,der_points = RF.getspline(x1,y1)   
-                        # Track_length =np.hypot(np.diff(x1), np.diff(y1)).sum()*176/10**3 #Determine tracklength
-                        
-                        Lridgecoord=[str(m)+' '+str(n) for m,n in zip(new_points[0],new_points[1])]
-                        LRidgescoord = pd.DataFrame({'Image: '+str(tru_Im_num)+'; Track: '+str(Track_ID):Lridgecoord})
-                        Linked_Ridges = pd.concat([Linked_Ridges,LRidgescoord],axis=1)
-            except Exception as e:                
-                print("For Im "+str(j)+" linked track "+str(k))
-                print(e)
-        
-    if linked_lines == True:
-          return Ridges, Linked_Ridges
-    elif linked_lines == False:
-          a = []
-          return Ridges , a
+    # if linked_lines == True:
+    #       return Ridges, Linked_Ridges
+    # elif linked_lines == False:
+    #       a = []
+    #       return Ridges , a
   
-def main():
-    directory = "C:\\Users\\tilly\\Documents\\Simulations\\50torrCF4_5.204keV\\5.204 keV\\"
-    SIGMA = 3.6 #sigma for derivative determination ~> Related to track width
-    lthresh = 0.3 #tracks with a response lower than this are rejected (0 accepts all)
-    uthresh = 0 #tracks with a response higher than this are rejected (0 accepts all)
-    minlen = 11 #minimum track length accepted
-    linkthresh = 11 #maximum distance to be linked
-    logim = False
+# def main():
+#     directory = "C:\\Users\\tilly\\Documents\\Simulations\\50torrCF4_5.204keV\\5.204 keV\\"
+#     SIGMA = 3.6 #sigma for derivative determination ~> Related to track width
+#     lthresh = 0.3 #tracks with a response lower than this are rejected (0 accepts all)
+#     uthresh = 0 #tracks with a response higher than this are rejected (0 accepts all)
+#     minlen = 11 #minimum track length accepted
+#     linkthresh = 11 #maximum distance to be linked
+#     logim = False
     
-    Ridges, Linked_Ridges = getridges(directory,SIGMA,lthresh,uthresh,minlen,logim=logim,linked_lines=True, linkthresh=linkthresh)
+#     Ridges, Linked_Ridges = getridges(directory,SIGMA,lthresh,uthresh,minlen,logim=logim,linked_lines=True, linkthresh=linkthresh)
             
   
     
-if __name__=='__main__':
-    main()
+# if __name__=='__main__':
+#     main()
     
     

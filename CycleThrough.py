@@ -463,8 +463,8 @@ def make_plot_2(kk,directory,sigma, lt, ut, minlen, linkthresh, logim = False):
                 
                 ax1.plot(new_points1[1],new_points1[0],'-',color='white')
                 # ax2.plot(new_points1[1],new_points1[0],'-',color='white')
-                Bragg = RF.simplebragg(new_points1[0],new_points1[1],img)
-
+                # Bragg = RF.simplebragg(new_points1[0],new_points1[1],img)
+                Bragg = RF.InitialBragg(new_points1[0],new_points1[1],img)
                 indir,(x0,y0) = RF.initdir_simdat(new_points1[1],new_points1[0],pix=1)
                 slope = abs(np.tan(indir))
                 leng = 10
