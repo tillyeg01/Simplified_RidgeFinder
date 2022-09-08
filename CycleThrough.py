@@ -731,3 +731,132 @@ def cycleimages(directory,sigma, lt, ut, minlen, linkthresh, logim = False):
             er_plot(kk,directory)
         _ = input("Press [enter] to continue.")
 
+def make_plot_0(img,sigma, lt, ut, minlen, linkthresh, logim = False):
+    '''
+    Create a figure containing the image of the particle track and its
+    ridgeline. Two plots are produced in this figure. One is in linear space
+    and the other is in log space. On both, the unlinked and linked ridges are
+    plotted. The linked are plotted as a thin white line overlayed on the 
+    colored points of the unlinked lines.
+    
+    This can be iterated through.
+    
+    Parameters
+    ----------
+    img: numpy array
+        The image for analysis.
+    sigma : float
+        Sigma for derivative determination (somehow relate to track width).
+    lt : float
+        Lower threshold for the ridgefinding algorithm.
+        This excludes tracks whose hessian eigenvalues fall below lthresh.
+    ut : float
+        Upper threshold for the ridgefinding algorithm.
+        This excludes tracks whose hessian eigenvalues exceed uthresh.
+    minlen : int
+        Minimum track length accepted.
+    linkthresh : int
+        The maximum distance between endpoints allowed for linking ridges.
+    logim : BOOL, optional
+        Do you want the RidgeFinder to operate on the image in log space?
+        The default is False.
+
+    Returns
+    -------
+    xx,yy : numpy array
+        The points on the last ridge that was found.
+
+    '''
+
+    ################################################################
+    ##Initialize matplotlib
+    plt.close()
+    plt.rc('font', size=10)
+
+    
+
+    ################################################################
+    #These are the Parameters to change to work with the RF        #
+    ################################################################
+    
+    SIGMA = sigma #sigma for derivative determination ~> Related to track width
+    lthresh = lt #tracks with a response lower than this are rejected (0 accepts all)
+    uthresh = ut #tracks with a response higher than this are rejected (0 accepts all)
+    minlen = minlen #minimum track length accepted
+    linkthresh = linkthresh #maximum distance to be linked
+    # thresh = 0.0001
+
+    
+    
+    if logim:
+        c = 255/np.log(1+np.max(img))
+        img2 = c *(np.log(img+1))
+    else:
+        img2 = img  
+    
+    c = 255/np.log(1+np.max(img))
+    img3 = c *(np.log(img+1))
+    
+    # img2 = img2[np.isfinite(img2)]
+    ##Run Ridgefinder
+    px, py, nx, ny, eigvals, valid = points_out = RF.find_points(img2, sigma=SIGMA, l_thresh = lthresh, u_thresh=uthresh)
+    lines_before, junctions = RF.compose_lines_from_points(points_out)
+    
+    ##Link the Ridges
+    nlines = RF.linklines(lines_before,minlen,linkthresh)
+    lines=lines_before
+    
+    ##Set some plot properties
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16,8), dpi=80, facecolor='w', edgecolor='k')
+    
+    
+    ax1.imshow(img, cmap="magma")
+    ax1.set_title('Linear Scaling')
+    ax2.imshow(img3, cmap="magma")
+    ax2.set_title('Logarithmic Scaling')
+    lim =RF.get_lines_bounding_box(lines)
+    
+    
+    ##Run through all ridges found in image
+    
+    ##Create and plot the splinefit for all unlinked ridgepoints
+    for i, line in enumerate(lines):
+        if len(line[1]) > minlen:
+                
+                ax1.set_xlim(lim)
+                ax1.set_ylim(lim)
+                ax2.set_xlim(lim)
+                ax2.set_ylim(lim)
+                
+                x = px[line[1], line[0]]
+                y = py[line[1], line[0]]
+                
+                ##Get the splinefit for the image
+                try:
+                    new_points,der_points = RF.getspline(x,y,ss=1)    
+                    ax1.plot(new_points[1],new_points[0],'.')
+                    ax2.plot(new_points[1],new_points[0],'.')
+                except Exception as e: print(e)
+
+    ##Create and plot the splinefit for all linked ridgepoints            
+    for i, line in enumerate(nlines):
+        if len(line[1]) > minlen:
+            
+                x = px[line[1], line[0]]
+                y = py[line[1], line[0]]   
+                
+                ##Get the splinefit for the image
+                try:
+                    new_points1,der_points1 = RF.getspline(x,y,ss=2)    
+                    ax1.plot(new_points1[1],new_points1[0],'-',color='white')
+                    ax2.plot(new_points1[1],new_points1[0],'-',color='white')
+                    
+                    xx = new_points1[0]
+                    yy = new_points1[1]
+                except Exception as e: print(e)
+
+    
+    plt.show()
+    plt.pause(0.1) ##This command allows the cycling to actually happen
+    return xx,yy
+    
