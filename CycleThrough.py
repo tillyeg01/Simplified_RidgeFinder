@@ -859,4 +859,53 @@ def make_plot_0(img,sigma, lt, ut, minlen, linkthresh, logim = False):
     plt.show()
     plt.pause(0.1) ##This command allows the cycling to actually happen
     return xx,yy
+
+def getridge(img,sigma, lt, ut, minlen, linkthresh, logim = False):
+    ################################################################
+    #These are the Parameters to change to work with the RF        #
+    ################################################################
+    
+    SIGMA = sigma #sigma for derivative determination ~> Related to track width
+    lthresh = lt #tracks with a response lower than this are rejected (0 accepts all)
+    uthresh = ut #tracks with a response higher than this are rejected (0 accepts all)
+    minlen = minlen #minimum track length accepted
+    linkthresh = linkthresh #maximum distance to be linked
+    # thresh = 0.0001
+
+    
+    
+    if logim:
+        c = 255/np.log(1+np.max(img))
+        img2 = c *(np.log(img+1))
+    else:
+        img2 = img  
+    
+    c = 255/np.log(1+np.max(img))
+    
+    ##Run Ridgefinder
+    px, py, nx, ny, eigvals, valid = points_out = RF.find_points(img2, sigma=SIGMA, l_thresh = lthresh, u_thresh=uthresh)
+    lines_before, junctions = RF.compose_lines_from_points(points_out)
+    
+    ##Link the Ridges
+    nlines = RF.linklines(lines_before,minlen,linkthresh)
+    
+
+    ##Create and plot the splinefit for all linked ridgepoints            
+    for i, line in enumerate(nlines):
+        if len(line[1]) > minlen:
+            
+                x = px[line[1], line[0]]
+                y = py[line[1], line[0]]   
+                
+                ##Get the splinefit for the image
+                try:
+                    new_points1,der_points1 = RF.getspline(x,y,ss=2)    
+                    
+                    
+                    xx = new_points1[0]
+                    yy = new_points1[1]
+                except Exception as e: print(e)
+
+    
+    return xx,yy
     
