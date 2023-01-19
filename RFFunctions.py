@@ -551,11 +551,34 @@ def simplebragg(x,y,img):
     SimpleBragg = img[xint,yint]
     return SimpleBragg
 
+### OLD CODE ###
+# def getspline(x,y,ss=0,Nmult=3):
+#     ##Find a splinefit of the ridgeline
+    
+#     N = len(x)*Nmult
+#     xx = np.linspace(0, 1, N)
+#     tck, u = interpolate.splprep([x,y],s=ss)
+#     new_points = interpolate.splev(xx,tck)
+#     ##Get the derivative of this point
+#     der_points = interpolate.splev(xx,tck,der=1)
+#     return new_points, der_points
+
 def getspline(x,y,ss=0,Nmult=3):
     ##Find a splinefit of the ridgeline
-    
     N = len(x)*Nmult
     xx = np.linspace(0, 1, N)
+   
+    #INCLUDED HERE IS A FIX TO A BUG IN SCIPY - see: https://stackoverflow.com/questions/47948453/scipy-interpolate-splprep-error-invalid-inputs
+    bad = np.where(np.abs(np.diff(x)) + np.abs(np.diff(y)) == 0)
+   
+    for i in range(len(bad)):
+        np.delete(x,bad[i])
+        np.delete(x,bad[i]+1)
+        np.delete(y,bad[i])
+        np.delete(y,bad[i]+1)
+
+    #end of fix
+
     tck, u = interpolate.splprep([x,y],s=ss)
     new_points = interpolate.splev(xx,tck)
     ##Get the derivative of this point
