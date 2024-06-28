@@ -4,8 +4,8 @@
 # directory = "C:\\Users\\tilly\\Documents\\Fe-55 Data\\2022.June.11 - CS2 smoothed tracks\\sigma is 4 by 3 pixels\\"
 # directory = "C:\\Users\\tilly\\Documents\\Fe-55 Data\\2022.June.11 - CS2 smoothed tracks\\sigma is 1 pixel\\"
 # directory = "C:\\Users\\tilly\\Documents\\Fe-55 Data\\2022.June.10 - CS2 tracks\\"
-directory = "D:\\Simulation data\\Tim's Deconv\\2022.July.11 - 256x256 DD Migdal e\\Deconv PSF 450 um\\DD Deconv\\"
-# directory = "C:\\Users\\tilly\\Documents\\Simulations\\Tims Tracks\\DD Deconv\\"
+# directory = "D:\\Simulation data\\Tim's Deconv\\2022.July.11 - 256x256 DD Migdal e\\Deconv PSF 450 um\\DD Deconv\\"
+directory = "C:\\Users\\tilly\\Documents\\Simulations\\Tims Tracks\\DD Deconv\\"
 
 import time
 
@@ -19,26 +19,26 @@ logim = True
 st = time.time()
 
 from CycleThrough import cycleimages,make_plot,make_plot_2, er_plot
-cycleimages(directory,
-            SIGMA,
-            lthresh,
-            uthresh,
-            minlen,
-            linkthresh,
-            logim)
+# cycleimages(directory,
+#             SIGMA,
+#             lthresh,
+#             uthresh,
+#             minlen,
+#             linkthresh,
+#             logim)
 # make_plot_2(5,directory,SIGMA,
 #             lthresh,
 #             uthresh,
 #             minlen,
 #             linkthresh,
 #             logim)
-# make_plot(3,directory,
-#           SIGMA,
-#           lthresh,
-#           uthresh,
-#           minlen,
-#           linkthresh,
-#           logim)
+make_plot(3,directory,
+          SIGMA,
+          lthresh,
+          uthresh,
+          minlen,
+          linkthresh,
+          logim)
 
 # er_plot(1,directory)
 
